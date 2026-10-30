@@ -492,23 +492,25 @@ svg.chev{width:18px;height:18px;flex:none;color:var(--chalk-3)}
 
 /* الجوال بالعرض مع فيديو: الفيديو بعمود والتسجيل بعمود جنبه */
 @media (orientation:landscape) and (max-height:540px){
-  .focus.withvid{display:grid;grid-template-columns:minmax(0,46%) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:18px}
-  .focus.withvid #f-head{grid-column:1/-1}
-  .focus.withvid #f-vslot{grid-column:1;grid-row:2;align-self:start}
-  .focus.withvid #f-body{grid-column:2;grid-row:2}
+  .focus.withvid,.focus.withaud{display:grid;grid-template-columns:minmax(0,46%) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:18px}
+  .focus.withvid #f-head,.focus.withaud #f-head{grid-column:1/-1}
+  .focus.withvid #f-vslot,.focus.withaud #f-vslot{grid-column:1;grid-row:2;align-self:start}
+  .focus.withvid #f-body,.focus.withaud #f-body{grid-column:2;grid-row:2}
+  .withaud .vrow.audio{flex-wrap:wrap}
+  .withaud .f-demo{display:none}
   .withvid .f-dots{margin-top:6px}
   .withvid .vrow,.withvid .vrow.big{flex-direction:column;align-items:center;gap:2px;margin-top:8px}
   .withvid .vrow .vid,.withvid .vrow.big .vid{width:min(100%,calc((100dvh - 150px) * 16 / 9));margin:0}
   .withvid .vrow .vctl{grid-template-columns:repeat(4,38px);justify-content:center}
   .withvid .vctl [data-a=v-size]{display:none}
-  .withvid .f-val .n{font-size:clamp(30px,9dvh,46px)}
-  .withvid .f-val button{width:44px;height:44px;font-size:22px}
-  .withvid .f-done{height:46px;font-size:17px}
-  .withvid .f-sub{margin-top:6px}
-  .withvid .f-sub button{padding:6px 10px}
-  .withvid .f-rest{gap:8px;padding:8px}
-  .withvid .plate-ring{width:clamp(96px,calc(100dvh - var(--rt,0px) - 170px),200px)}
-  .withvid .rest-ctl button{height:40px}
+  .focus .f-val .n{font-size:clamp(30px,9dvh,46px)}
+  .focus .f-val button{width:44px;height:44px;font-size:22px}
+  .focus .f-done{height:46px;font-size:17px}
+  .focus .f-sub{margin-top:6px}
+  .focus .f-sub button{padding:6px 10px}
+  .focus .f-rest{gap:8px;padding:8px}
+  .focus .plate-ring{width:clamp(96px,calc(100dvh - var(--rt,0px) - 170px),200px)}
+  .focus .rest-ctl button{height:40px}
 }
 
 /* ===== v3: شاشة التمرين ===== */
@@ -601,6 +603,21 @@ body.has-sb .rest-pill{bottom:calc(var(--tab-h) + var(--safe-b) + 80px)}
 .foot svg{width:16px;height:16px}
 .eqs{margin-top:-4px}
 .eqs .chip{font-size:12.5px;padding:5px 11px}
+
+/* صوت فقط: المشغّل بكسل واحد (يوتيوب يختار أقل جودة) والتحكم من شريط صغير */
+.vrow.audio{align-items:center}
+.vrow.audio .vid{position:absolute;width:1px;height:1px;opacity:.01;pointer-events:none;overflow:hidden;flex:none}
+.vaud{display:none}
+.vrow.audio .vaud{display:flex;align-items:center;gap:10px;flex:1;min-width:0;background:var(--iron-2);border:1px solid var(--line);border-radius:14px;padding:6px 10px 6px 6px}
+.vplay{width:38px;height:38px;border-radius:50%;background:var(--y);color:var(--y-ink);display:grid;place-items:center;flex:none}
+.vplay svg{width:18px;height:18px;fill:currentColor}
+.vaud .t{min-width:0;line-height:1.25}
+.vaud b{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--chalk)}
+.vaud b svg{width:14px;height:14px;color:var(--y)}
+.vaud .t span{display:block;font-size:12px;color:var(--chalk-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vrow.audio .vctl{grid-template-columns:repeat(3,38px)}
+.vrow .vctl{grid-template-columns:repeat(3,38px)}
+.vrow.big .vctl{grid-template-columns:repeat(5,38px)}
 
 </style>
 </head>
@@ -1091,7 +1108,7 @@ const store = (() => {
 })();
 
 /* ================= الحالة ================= */
-const DEF_SETTINGS = { sex: 'm', level: 'mid', rest: 90, autoNext: true, sound: true, vibrate: true, wake: true, warmHint: true, onboarded: false, notify: false, goal: null, kcal: null, protein: null };
+const DEF_SETTINGS = { sex: 'm', level: 'mid', rest: 90, autoNext: true, sound: true, vibrate: true, wake: true, warmHint: true, onboarded: false, vidAudio: false, notify: false, goal: null, kcal: null, protein: null };
 const APP_VER = 'تجريبي 3.0 — 30 أكتوبر 2026';
 const S = {
   settings: Object.assign({}, DEF_SETTINGS, store.get('settings', {})),
@@ -1443,6 +1460,8 @@ const IC = {
   paste:'<rect x="6" y="4" width="12" height="17" rx="2.5"/><path d="M9.5 4V2.5h5V4M9.5 10h5M9.5 14h5"/>',
   grow:'<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>', shrink:'<path d="M4 14h6v6M20 10h-6V4M10 14l-6.5 6.5M14 10l6.5-6.5"/>',
   list:'<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+  headphones:'<path d="M4 15v-3a8 8 0 0116 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/>',
+  pause:'<path d="M8.5 5v14M15.5 5v14"/>',
   link:'<path d="M10 14a4.5 4.5 0 006.4 0l3-3a4.5 4.5 0 00-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 00-6.4 0l-3 3a4.5 4.5 0 006.4 6.4l1-1"/>',
   unlink:'<path d="M10 14a4.5 4.5 0 006.4 0l3-3a4.5 4.5 0 00-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 00-6.4 0l-3 3a4.5 4.5 0 006.4 6.4l1-1"/><path d="M4 4l16 16"/>',
   yt:'<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.2 9.3v5.4l4.6-2.7z" fill="currentColor" stroke="none"/>', search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
@@ -1990,7 +2009,7 @@ setInterval(tick, 250);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); if (F.on) requestWake(); } });
 
 /* ================= وضع التركيز ================= */
-const F = { on: false, i: 0, s: 0, resting: false, vid: null, lock: false, showVid: false, big: false, w: null, r: null };
+const F = { on: false, i: 0, s: 0, resting: false, vid: null, lock: false, showVid: false, big: false, playing: false, w: null, r: null };
 let wakeLock = null;
 async function requestWake() { if (!S.settings.wake || !('wakeLock' in navigator)) return; try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
 function releaseWake() { try { wakeLock?.release(); } catch (e) {} wakeLock = null; }
@@ -2030,10 +2049,11 @@ function renderFocus() {
   const tb = (a, icn, t, on, extra = '') => `<button data-a="${a}" aria-label="${t}" title="${t}"${on ? ' class="on"' : ''}${extra}>${ic(icn)}</button>`;
   $('#f-head').innerHTML = `<div class="f-top"><button class="icon-btn" data-a="focus-close" aria-label="إغلاق">${ic('x')}</button><div class="t"><div>تمرين ${F.i + 1} من ${d.items.length} — ${label}${grp.length > 1 ? ' · <span class="ss-tag">سوبر سِت</span>' : ''}</div><b>${esc(ex.n)}</b></div></div>
   <div class="f-tools">${tb('f-vid', 'video', 'فيديو', F.showVid)}${tb('yt-search', 'yt', 'ابحث في يوتيوب', false, ' style="color:#FF5A52"')}${tb('ex-info', 'info', 'شرح التمرين', false, ` data-ex="${ex.id}" data-i="${F.i}"`)}${bar ? tb('plates', 'plate', 'حاسبة الأقراص', false, ` data-i="${F.i}"`) : ''}<div class="f-dots">${it.sets.map((x, j) => `<i class="${x.done ? 'done' : j === F.s ? 'cur' : ''}"></i>`).join('')}</div></div>`;
-  el.classList.toggle('withvid', F.showVid);
+  const aud = F.showVid && S.settings.vidAudio && S.videos.length;
+  el.classList.toggle('withvid', F.showVid && !aud); el.classList.toggle('withaud', !!aud);
   syncVideo();
   let h = `<div class="f-main">`;
-  if (!F.showVid) h += `<div class="f-demo">${demo(ex.id, '', true)}</div>`;
+  if (!F.showVid || aud) h += `<div class="f-demo">${demo(ex.id, '', true)}</div>`; // في وضع الصوت نرجّع حركة التمرين
   h += `<div><div class="f-val"><button data-a="f-step" data-k="w" data-d="${st}" aria-label="زد الوزن">+</button><div class="n num"><input id="f-w" inputmode="decimal" value="${F.w ?? ''}" placeholder="0" aria-label="الوزن"></div><button data-a="f-step" data-k="w" data-d="${-st}" aria-label="قلل الوزن">−</button></div><div class="f-val"><div class="lbl" style="flex:1">${ex.bw ? 'وزن إضافي (كغ)' : 'كغ'}</div></div></div>
   <div><div class="f-val"><button data-a="f-step" data-k="r" data-d="1" aria-label="زد">+</button><div class="n num"><input id="f-r" inputmode="numeric" value="${F.r ?? ''}" placeholder="0" aria-label="${unit}"></div><button data-a="f-step" data-k="r" data-d="-1" aria-label="قلل">−</button></div><div class="f-val"><div class="lbl" style="flex:1">${unit} — الهدف ${esc(it.reps)}</div></div></div>
   <div class="f-prev num">${p ? `آخر مرة: ${setHTML(p.w, p.r)}` : 'أول مرة لهالمجموعة'}${sg?.src === 'up' ? ` — <span style="color:#5FD3A0">زد الوزن اليوم</span>` : ''}</div>
@@ -2099,20 +2119,36 @@ function addVideo(url, title) {
 /* مشغّل صغير ثابت: الـ iframe ينبني فقط إذا تغيّر المقطع — القفل والتكبير وكل ضغطات التسجيل ما توقفه */
 function syncVideo() {
   const slot = $('#f-vslot'); if (!slot) return;
-  if (!F.showVid) { if (slot.innerHTML) slot.innerHTML = ''; slot.className = ''; return; }
+  if (!F.showVid) { if (slot.innerHTML) slot.innerHTML = ''; slot.className = ''; F.playing = false; return; }
   const v = F.vid && S.videos.some(x => x.id === F.vid) ? F.vid : (S.videos[0]?.id || null);
   if (v !== F.vid) F.vid = v;
-  slot.className = 'vrow' + (v ? (F.big ? ' big' : '') : ' none');
+  const aud = !!(v && S.settings.vidAudio);
+  slot.className = 'vrow' + (v ? (aud ? ' audio' : F.big ? ' big' : '') : ' none');
   const box = slot.querySelector('.vid');
-  if (v && box?.dataset.id !== v) slot.innerHTML = `<div class="vid" data-id="${v}"><iframe src="https://www.youtube-nocookie.com/embed/${v}?playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="فيديو"></iframe><div class="lock"><span>${ic('lock')}مقفل</span></div></div><div class="vctl"></div>`;
-  else if (!v && (box || !slot.querySelector('.vctl'))) slot.innerHTML = '<div class="vempty">انسخ رابط يوتيوب واضغط لصق</div><div class="vctl"></div>';
-  slot.querySelector('.vid')?.classList.toggle('locked', F.lock);
+  if (v && box?.dataset.id !== v) {
+    F.playing = false;
+    slot.innerHTML = `<div class="vid" data-id="${v}"><iframe src="https://www.youtube-nocookie.com/embed/${v}?playsinline=1&rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="فيديو"></iframe><div class="lock"><span>${ic('lock')}مقفل</span></div></div><div class="vaud"></div><div class="vctl"></div>`;
+    const f = slot.querySelector('iframe'); f.addEventListener('load', () => ytPost(f, { event: 'listening', id: 1, channel: 'widget' }));
+  } else if (!v && (box || !slot.querySelector('.vctl'))) slot.innerHTML = '<div class="vempty">انسخ رابط يوتيوب واضغط لصق</div><div class="vctl"></div>';
+  slot.querySelector('.vid')?.classList.toggle('locked', F.lock && !aud);
   const b = (a, icn, t, on, n) => `<button data-a="${a}" aria-label="${t}" title="${t}"${on ? ' class="on"' : ''}>${ic(icn)}${n ? `<i class="num">${n}</i>` : ''}</button>`;
   const list = b('video-sheet', 'list', 'المقاطع', false, S.videos.length), paste = b('v-paste', 'paste', 'لصق رابط');
-  slot.querySelector('.vctl').innerHTML = v
-    ? b('v-lock', F.lock ? 'unlock' : 'lock', F.lock ? 'فك القفل' : 'قفل اللمس', F.lock) + b('v-size', F.big ? 'shrink' : 'grow', F.big ? 'تصغير' : 'تكبير') + paste + list
-    : paste + list;
+  const va = slot.querySelector('.vaud');
+  if (va) va.innerHTML = aud ? `<button class="vplay" data-a="v-pp" aria-label="${F.playing ? 'إيقاف' : 'تشغيل'}">${ic(F.playing ? 'pause' : 'play')}</button><div class="t"><b>${ic('headphones')}صوت فقط</b><span>${esc(S.videos.find(x => x.id === v)?.t || 'مقطع يوتيوب')}</span></div>` : '';
+  slot.querySelector('.vctl').innerHTML = !v ? paste + list
+    : aud ? b('v-audio', 'video', 'رجّع الفيديو') + paste + list
+    : b('v-audio', 'headphones', 'صوت فقط') + b('v-lock', F.lock ? 'unlock' : 'lock', F.lock ? 'فك القفل' : 'قفل اللمس', F.lock) + b('v-size', F.big ? 'shrink' : 'grow', F.big ? 'تصغير' : 'تكبير') + paste + list;
 }
+/* أوامر يوتيوب عبر postMessage (تشغيل/إيقاف) وقراءة حالة التشغيل */
+function ytPost(f, msg) { try { f?.contentWindow?.postMessage(JSON.stringify(msg), '*'); } catch (e) {} }
+function ytCmd(func) { ytPost($('#f-vslot iframe'), { event: 'command', func, args: [] }); }
+addEventListener('message', e => {
+  if (!/youtube(-nocookie)?\.com$/.test(new URL(e.origin || 'http://x').hostname)) return;
+  let d; try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (er) { return; }
+  const st = d?.info?.playerState; if (st == null) return;
+  const was = F.playing; F.playing = st === 1 || st === 3;
+  if (was !== F.playing && F.on && S.settings.vidAudio) { const btn = $('#f-vslot .vplay'); if (btn) { btn.innerHTML = ic(F.playing ? 'pause' : 'play'); btn.setAttribute('aria-label', F.playing ? 'إيقاف' : 'تشغيل'); } }
+});
 function videoSheet() {
   openSheet('مقاطع يوتيوب', `<div class="row-btns"><input id="v-url" placeholder="الصق رابط يوتيوب" inputmode="url"><button class="btn y" data-a="v-add" style="flex:none">${ic('plus')}</button></div>
   <div style="height:8px"></div><button class="btn block" data-a="v-paste">${ic('paste')}لصق من الحافظة</button>
@@ -2420,6 +2456,8 @@ document.addEventListener('click', e => {
     case 'yt-search': { const it = draft().items[F.i]; if (it) ytSearch(EXM[it.ex].n); break; }
     case 'v-lock': F.lock = !F.lock; renderFocus(); break;
     case 'v-size': F.big = !F.big; renderFocus(); break;
+    case 'v-audio': S.settings.vidAudio = !S.settings.vidAudio; save.settings(); renderFocus(); toast(S.settings.vidAudio ? 'صوت فقط — المقطع يشتغل بأقل استهلاك' : 'رجع الفيديو'); break;
+    case 'v-pp': if (F.playing) { ytCmd('pauseVideo'); F.playing = false; } else { ytCmd('playVideo'); F.playing = true; } renderFocus(); break;
     case 'v-paste': pasteVideo(); break;
     case 'video-sheet': videoSheet(); break;
     case 'v-add': { const id = addVideo($('#v-url').value); if (id) { F.vid = id; closeSheet(); if (F.on) { F.showVid = true; renderFocus(); } else openFocus(0, true); } break; }
