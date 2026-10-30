@@ -1,5 +1,5 @@
 /* دفتر التمرين — Service Worker */
-const V = 'gymlog-shell-v202610300903', MEDIA = 'gymlog-media-v1';
+const V = 'gymlog-shell-v202610300932', MEDIA = 'gymlog-media-v1';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 // GitHub Pages يخزّن الصفحة 10 دقايق في المتصفح — نطلب نسخة جديدة دائماً عشان التحديث يوصل فوراً
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting())); });
@@ -8,6 +8,7 @@ self.addEventListener('fetch', e => {
   const r = e.request; if (r.method !== 'GET') return;
   const u = new URL(r.url); if (u.origin !== location.origin) return;
   // الصفحة: الشبكة أولاً ثم النسخة المخزنة (رابط المشاركة فيه ?url=… فنخدمه بنفس الصفحة)
+  if (u.pathname.includes('/beta/')) return; // النسخة التجريبية: من الشبكة دائماً وما تنخزن مكان التطبيق
   if (r.mode === 'navigate') {
     e.respondWith(fetch(new Request(r, { cache: 'no-cache' })).then(res => { if (res.ok) { const c = res.clone(); caches.open(V).then(x => x.put('./index.html', c)); } return res; }).catch(() => caches.match('./index.html', { ignoreSearch: true })));
     return;
@@ -19,3 +20,5 @@ self.addEventListener('fetch', e => {
   }
   e.respondWith(caches.match(r, { ignoreSearch: true }).then(hit => hit || fetch(r).then(res => { if (res.ok) { const c = res.clone(); caches.open(V).then(x => x.put(r, c)); } return res; })));
 });
+// ضغطة على إشعار الراحة ترجعك للتطبيق
+self.addEventListener('notificationclick', e => { e.notification.close(); e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => { const c = cs.find(x => 'focus' in x); return c ? c.focus() : self.clients.openWindow('./'); })); });
