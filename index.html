@@ -404,18 +404,17 @@ svg.chev{width:18px;height:18px;flex:none;color:var(--chalk-3)}
 #f-vslot{z-index:3;flex:none}
 .vrow{display:flex;gap:8px;margin-top:10px;align-items:flex-start}
 .vrow .vid{flex:0 0 56%;max-width:260px}
-.vrow .vctl{flex:1;max-width:300px;display:grid;grid-template-columns:1fr 1fr;gap:6px;align-self:stretch}
-.vrow .vctl button{border-radius:10px;background:var(--iron-2);border:1px solid var(--line);font-size:11.5px;line-height:1.2;color:var(--chalk-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 2px;min-height:40px}
-.vrow .vctl button.on{color:var(--y);border-color:var(--y)}
-.vrow .vctl svg{width:17px;height:17px;flex:none}
-.vrow .vctl button:active{background:var(--iron-3)}
-.vrow.big{flex-direction:column;align-items:stretch}
+.vrow .vctl{flex:none;display:grid;grid-template-columns:repeat(2,38px);gap:2px;align-content:start}
+.vrow .vctl button{width:38px;height:38px;border-radius:50%;background:none;border:0;padding:0;color:var(--chalk-3);display:grid;place-items:center;position:relative}
+.vrow .vctl button:active{background:var(--iron-2);color:var(--chalk)}
+.vrow .vctl button.on{color:var(--y)}
+.vrow .vctl svg{width:20px;height:20px}
+.vrow .vctl i{position:absolute;top:3px;inset-inline-start:3px;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:var(--iron-3);color:var(--chalk-2);font-size:9.5px;font-style:normal;line-height:14px;text-align:center}
+.vrow.big{flex-direction:column;align-items:stretch;gap:2px}
 .vrow.big .vid{flex:none;width:100%;max-width:none}
-.vrow.big .vctl{grid-template-columns:repeat(4,1fr);max-width:none}
-.vrow.big .vctl button{flex-direction:row;min-height:38px;gap:4px;white-space:nowrap;font-size:11px}
-.vrow.big .vctl svg{width:15px;height:15px}
-.vrow.none .vctl{grid-template-columns:1fr 1fr}
-.vrow .vempty{grid-column:1/-1;font-size:12.5px;color:var(--chalk-3);text-align:center;padding:4px 0}
+.vrow.big .vctl{grid-template-columns:repeat(4,38px);justify-content:center}
+.vrow.none{align-items:center}
+.vrow .vempty{flex:1;font-size:12.5px;color:var(--chalk-3)}
 /* هيكل وضع التركيز */
 .f-body{flex:1;min-height:0;display:flex;flex-direction:column}
 #f-restslot{position:static}
@@ -1810,12 +1809,13 @@ function syncVideo() {
   slot.className = 'vrow' + (v ? (S.settings.vidBig ? ' big' : '') : ' none');
   const box = slot.querySelector('.vid');
   if (v && box?.dataset.id !== v) slot.innerHTML = `<div class="vid" data-id="${v}"><iframe src="https://www.youtube-nocookie.com/embed/${v}?playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="فيديو"></iframe><div class="lock"><span>${ic('lock')}مقفل</span></div></div><div class="vctl"></div>`;
-  else if (!v && (box || !slot.querySelector('.vctl'))) slot.innerHTML = '<div class="vctl"></div>';
+  else if (!v && (box || !slot.querySelector('.vctl'))) slot.innerHTML = '<div class="vempty">انسخ رابط يوتيوب واضغط لصق</div><div class="vctl"></div>';
   slot.querySelector('.vid')?.classList.toggle('locked', F.lock);
-  const b = (a, icn, t, on) => `<button data-a="${a}"${on ? ' class="on"' : ''}>${ic(icn)}<span>${t}</span></button>`;
+  const b = (a, icn, t, on, n) => `<button data-a="${a}" aria-label="${t}" title="${t}"${on ? ' class="on"' : ''}>${ic(icn)}${n ? `<i class="num">${n}</i>` : ''}</button>`;
+  const list = b('video-sheet', 'list', 'المقاطع', false, S.videos.length), paste = b('v-paste', 'paste', 'لصق رابط');
   slot.querySelector('.vctl').innerHTML = v
-    ? b('v-lock', F.lock ? 'unlock' : 'lock', F.lock ? 'فك القفل' : 'قفل', F.lock) + b('v-size', S.settings.vidBig ? 'shrink' : 'grow', S.settings.vidBig ? 'تصغير' : 'تكبير') + b('v-paste', 'paste', 'لصق رابط') + b('video-sheet', 'list', `المقاطع ${S.videos.length}`)
-    : `<div class="vempty">انسخ رابط من يوتيوب واضغط «لصق رابط»</div>` + b('v-paste', 'paste', 'لصق رابط') + b('video-sheet', 'list', `المقاطع ${S.videos.length}`);
+    ? b('v-lock', F.lock ? 'unlock' : 'lock', F.lock ? 'فك القفل' : 'قفل اللمس', F.lock) + b('v-size', S.settings.vidBig ? 'shrink' : 'grow', S.settings.vidBig ? 'تصغير' : 'تكبير') + paste + list
+    : paste + list;
 }
 function videoSheet() {
   openSheet('مقاطع يوتيوب', `<div class="row-btns"><input id="v-url" placeholder="الصق رابط يوتيوب" inputmode="url"><button class="btn y" data-a="v-add" style="flex:none">${ic('plus')}</button></div>
