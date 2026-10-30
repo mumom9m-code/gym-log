@@ -394,10 +394,43 @@ svg.chev{width:18px;height:18px;flex:none;color:var(--chalk-3)}
 .rest-ctl button.y{background:var(--y);color:var(--y-ink);border-color:var(--y)}
 
 /* video */
-.vid{border-radius:16px;overflow:hidden;background:#000;position:relative;aspect-ratio:16/9;flex:none;margin-top:10px}
+.vid{border-radius:12px;overflow:hidden;background:#000;position:relative;aspect-ratio:16/9;flex:none}
 .vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.vid .lock{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:8px;background:transparent}
-.vid .lock span{font-size:12px;background:rgba(0,0,0,.6);padding:4px 10px;border-radius:999px;color:var(--chalk-2)}
+.vid .lock{position:absolute;inset:0;display:none;align-items:flex-end;justify-content:center;padding:6px;background:transparent}
+.vid.locked .lock{display:flex}
+.vid .lock span{font-size:11px;background:rgba(0,0,0,.65);padding:3px 9px;border-radius:999px;color:var(--chalk-2);display:flex;align-items:center;gap:4px}
+.vid .lock svg{width:11px;height:11px}
+/* المشغّل الصغير: الفيديو بنص العرض والأزرار جنبه */
+#f-vslot{z-index:3;flex:none}
+.vrow{display:flex;gap:8px;margin-top:10px;align-items:flex-start}
+.vrow .vid{flex:0 0 56%;max-width:260px}
+.vrow .vctl{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:6px;align-self:stretch}
+.vrow .vctl button{border-radius:10px;background:var(--iron-2);border:1px solid var(--line);font-size:11.5px;line-height:1.2;color:var(--chalk-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 2px;min-height:40px}
+.vrow .vctl button.on{color:var(--y);border-color:var(--y)}
+.vrow .vctl svg{width:17px;height:17px;flex:none}
+.vrow .vctl button:active{background:var(--iron-3)}
+.vrow.big{flex-direction:column;align-items:stretch}
+.vrow.big .vid{flex:none;width:100%;max-width:none}
+.vrow.big .vctl{grid-template-columns:repeat(4,1fr)}
+.vrow.big .vctl button{flex-direction:row;min-height:38px;gap:4px;white-space:nowrap;font-size:11px}
+.vrow.big .vctl svg{width:15px;height:15px}
+.vrow.none .vctl{grid-template-columns:1fr 1fr}
+.vrow .vempty{grid-column:1/-1;font-size:12.5px;color:var(--chalk-3);text-align:center;padding:4px 0}
+/* هيكل وضع التركيز */
+.f-body{flex:1;min-height:0;display:flex;flex-direction:column}
+#f-restslot{position:static}
+.f-rest{top:var(--vb,0px)}
+.f-top .t div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f-main{overflow-y:auto;justify-content:safe center}
+/* مع الفيديو: نصغّر الأرقام والأزرار عشان كل شي يدخل الشاشة */
+.withvid .f-dots{margin-top:8px}
+.withvid .f-main{gap:4px}
+.withvid .f-val .n{font-size:clamp(38px,11.5vw,60px)}
+.withvid .f-val button{width:52px;height:52px;font-size:26px}
+.withvid .f-done{height:56px;font-size:18px;border-radius:18px}
+.withvid .f-sub{margin-top:8px}
+.withvid .f-rest{padding-top:12px;gap:12px}
+.withvid .plate-ring{width:clamp(130px,calc(100dvh - var(--vb,0px) - 230px),min(62vw,260px))}
 .vlist{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .vitem{display:flex;gap:10px;align-items:center;background:var(--iron-3);border-radius:12px;padding:6px;text-align:start}
 .vitem img{width:72px;height:40px;object-fit:cover;border-radius:8px;flex:none}
@@ -944,7 +977,7 @@ const store = (() => {
 })();
 
 /* ================= الحالة ================= */
-const DEF_SETTINGS = { sex: 'm', level: 'mid', rest: 90, autoNext: true, sound: true, vibrate: true, wake: true, warmHint: true, onboarded: false };
+const DEF_SETTINGS = { sex: 'm', level: 'mid', rest: 90, autoNext: true, sound: true, vibrate: true, wake: true, warmHint: true, onboarded: false, vidBig: false };
 const S = {
   settings: Object.assign({}, DEF_SETTINGS, store.get('settings', {})),
   plan: store.get('plan', null),          // {pid, name, days:[{n, items:[{u, ex, sets, reps, rest?}]}]}
@@ -1196,7 +1229,9 @@ const IC = {
   trophy:'<path d="M8 4h8v5a4 4 0 01-8 0zM8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M8.5 20h7"/>', edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
   focus:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', video:'<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="M16 10.5l5-3v9l-5-3"/>',
   lock:'<rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 018 0v3"/>', unlock:'<rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 017.5-2"/>',
-  paste:'<rect x="6" y="4" width="12" height="17" rx="2.5"/><path d="M9.5 4V2.5h5V4M9.5 10h5M9.5 14h5"/>', search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+  paste:'<rect x="6" y="4" width="12" height="17" rx="2.5"/><path d="M9.5 4V2.5h5V4M9.5 10h5M9.5 14h5"/>',
+  grow:'<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>', shrink:'<path d="M4 14h6v6M20 10h-6V4M10 14l-6.5 6.5M14 10l6.5-6.5"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>', search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
   chev:'<path d="M15 6l-6 6 6 6"/>', alert:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>', trend:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
   cal:'<rect x="4" y="5" width="16" height="16" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>', download:'<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/>',
   upload:'<path d="M12 16V5M7 9.5l5-5 5 5M5 20h14"/>', copy:'<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0014.5 4h-9A1.5 1.5 0 004 5.5v9A1.5 1.5 0 005.5 16H8"/>',
@@ -1682,9 +1717,12 @@ function nextUndone(d, i, s) {
   for (let a = 0; a < d.items.length; a++) { const it = d.items[a]; for (let b = 0; b < it.sets.length; b++) if (!it.sets[b].done) return [a, b]; }
   return null;
 }
-function openFocus(i = 0, withVid) {
+/* حالة وضع التركيز تنحفظ: لو المتصفح سكّر الصفحة وأنت في يوتيوب، ترجع لنفس التمرين والمجموعة والمقطع */
+function saveF() { store.set('focus', F.on ? { i: F.i, s: F.s, vid: F.vid, showVid: F.showVid, day: S.ui.day, t: Date.now() } : null); }
+function savedFocus() { const f = store.get('focus', null); return f && f.day === S.ui.day && Date.now() - f.t < 4 * 3600e3 && draft().items[f.i]?.sets[f.s] ? f : null; }
+function openFocus(i = 0, withVid, at) {
   const d = draft(); if (!d.items.length) return;
-  const n = nextUndone(d, i, 0) || [i, 0];
+  const n = at && d.items[at[0]]?.sets[at[1]] ? at : (nextUndone(d, i, 0) || [i, 0]);
   Object.assign(F, { on: true, i: n[0], s: n[1], resting: !!(S.timer && remain() > 0), showVid: !!withVid || F.showVid });
   loadFocusVals(); unlockAudio(); requestWake();
   $('#focus').classList.remove('hidden'); requestAnimationFrame(() => $('#focus').classList.add('on'));
@@ -1692,7 +1730,7 @@ function openFocus(i = 0, withVid) {
   renderFocus(); renderRestPill();
 }
 function closeFocus(fromPop) {
-  F.on = false; releaseWake();
+  F.on = false; releaseWake(); saveF();
   const f = $('#focus'); f.classList.remove('on'); setTimeout(() => { if (!F.on) { f.classList.add('hidden'); f.innerHTML = ''; } }, 360);
   if (!fromPop) { try { if (history.state?.focus) { IGNORE_POP = true; history.back(); } } catch (e) {} }
   render();
@@ -1709,10 +1747,13 @@ function renderFocus() {
   const p = prevFor(it, F.s), sg = suggest(it.ex, it.reps);
   const st = ex.st || 2.5, unit = ex.tm ? 'ثانية' : 'عدة';
   let wn = 0; const label = it.sets[F.s].t === 'n' ? `المجموعة ${it.sets.slice(0, F.s + 1).filter(x => x.t === 'n').length} من ${it.sets.filter(x => x.t === 'n').length}` : SET_T[it.sets[F.s].t].n;
-  let h = `<div class="f-top"><button class="icon-btn" data-a="focus-close" aria-label="إغلاق">${ic('x')}</button><div class="t"><div>تمرين ${F.i + 1} من ${d.items.length} — ${label}</div><b>${esc(ex.n)}</b></div><button class="icon-btn" data-a="f-vid" aria-label="فيديو" style="${F.showVid ? 'color:var(--y);border-color:var(--y)' : ''}">${ic('video')}</button><button class="icon-btn" data-a="ex-info" data-ex="${ex.id}" data-i="${F.i}" aria-label="شرح">؟</button></div>
+  // الهيكل يُبنى مرة وحدة: الفيديو في خانته الخاصة وما ينعاد تحميله مع أي ضغطة
+  if (!$('#f-body', el)) el.innerHTML = '<div id="f-head"></div><div id="f-vslot"></div><div class="f-body" id="f-body"></div><div id="f-restslot"></div>';
+  $('#f-head').innerHTML = `<div class="f-top"><button class="icon-btn" data-a="focus-close" aria-label="إغلاق">${ic('x')}</button><div class="t"><div>تمرين ${F.i + 1} من ${d.items.length} — ${label}</div><b>${esc(ex.n)}</b></div><button class="icon-btn" data-a="f-vid" aria-label="فيديو" style="${F.showVid ? 'color:var(--y);border-color:var(--y)' : ''}">${ic('video')}</button><button class="icon-btn" data-a="ex-info" data-ex="${ex.id}" data-i="${F.i}" aria-label="شرح">؟</button></div>
   <div class="f-dots">${it.sets.map((x, j) => `<i class="${x.done ? 'done' : j === F.s ? 'cur' : ''}"></i>`).join('')}</div>`;
-  if (F.showVid) h += videoPanel();
-  h += `<div class="f-main">`;
+  el.classList.toggle('withvid', F.showVid);
+  syncVideo();
+  let h = `<div class="f-main">`;
   if (!F.showVid) h += `<div class="f-demo">${demo(ex.id, '', true)}</div>`;
   h += `<div><div class="f-val"><button data-a="f-step" data-k="w" data-d="${st}" aria-label="زد الوزن">+</button><div class="n num"><input id="f-w" inputmode="decimal" value="${F.w ?? ''}" placeholder="0" aria-label="الوزن"></div><button data-a="f-step" data-k="w" data-d="${-st}" aria-label="قلل الوزن">−</button></div><div class="f-val"><div class="lbl" style="flex:1">${ex.bw ? 'وزن إضافي (كغ)' : 'كغ'}</div></div></div>
   <div><div class="f-val"><button data-a="f-step" data-k="r" data-d="1" aria-label="زد">+</button><div class="n num"><input id="f-r" inputmode="numeric" value="${F.r ?? ''}" placeholder="0" aria-label="${unit}"></div><button data-a="f-step" data-k="r" data-d="-1" aria-label="قلل">−</button></div><div class="f-val"><div class="lbl" style="flex:1">${unit} — الهدف ${esc(it.reps)}</div></div></div>
@@ -1720,14 +1761,22 @@ function renderFocus() {
   </div>`;
   h += all ? `<button class="f-done" data-a="finish" style="background:var(--g);color:#06231A">${ic('trophy')}خلصت — إنهاء التمرين</button>` : `<button class="f-done" data-a="f-done">${ic('check')}تم</button>`;
   h += `<div class="f-sub"><button data-a="f-nav" data-d="-1">${ic('chev').replace('<svg', '<svg style="width:14px;height:14px;display:inline;vertical-align:-2px;transform:scaleX(-1)"')} السابق</button><button data-a="focus-auto">${S.settings.autoNext ? 'تلقائي: يعمل' : 'تلقائي: متوقف'}</button><button data-a="f-nav" data-d="1">التالي ${ic('chev').replace('<svg', '<svg style="width:14px;height:14px;display:inline;vertical-align:-2px"')}</button></div>`;
+  $('#f-body').innerHTML = h; h = '';
   if (F.resting && S.timer && remain() > 0) {
     const n = nextUndone(d, F.i, F.s); const nx = n ? d.items[n[0]] : null;
     h += `<div class="f-rest" id="f-rest"><div class="plate-ring">${ringSVG(remain() / S.timer.total)}<div class="c"><b class="num" id="f-rest-n">${fmtDur(remain() + 999)}</b><span>راحة</span></div></div>
       <div class="next-up">${nx ? `<span>التالي</span><b>${esc(EXM[nx.ex].n)}</b>${S.timer.next ? `<bdi dir="ltr" class="num" style="color:var(--chalk-3);font-size:13px">${S.timer.next}</bdi>` : ''}` : '<b>آخر مجموعة خلصت</b>'}</div>
       <div class="rest-ctl"><button data-a="rest-add" data-s="-15">−15ث</button><button data-a="rest-add" data-s="15">+15ث</button><button class="y" data-a="rest-skip">ابدأ الحين</button></div></div>`;
   }
-  el.innerHTML = h;
+  $('#f-restslot').innerHTML = h;
+  layoutVid(); saveF();
 }
+/* شاشة الراحة تبدأ تحت الفيديو عشان يظل ظاهر */
+function layoutVid() {
+  const el = $('#focus'), v = $('#f-vslot'); if (!el || !v) return;
+  el.style.setProperty('--vb', F.showVid && v.offsetHeight ? (v.offsetTop + v.offsetHeight) + 'px' : '0px');
+}
+addEventListener('resize', () => { if (F.on) layoutVid(); });
 function focusDone() {
   const d = draft(), it = d.items[F.i], s = it.sets[F.s], ex = EXM[it.ex];
   const w = toNum($('#f-w')?.value), r = toNum($('#f-r')?.value);
@@ -1752,13 +1801,21 @@ function addVideo(url, title) {
   if (!S.videos.find(v => v.id === id)) { S.videos.unshift({ id, t: (title || '').slice(0, 80) || 'مقطع يوتيوب' }); save.videos(); }
   return id;
 }
-function videoPanel() {
-  const v = F.vid || S.videos[0]?.id;
-  let h = '';
-  if (v) h += `<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/${v}?playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="فيديو"></iframe>${F.lock ? `<div class="lock"><span>${ic('lock').replace('<svg', '<svg style="width:12px;height:12px;display:inline;vertical-align:-1px"')} مقفل ضد اللمس</span></div>` : ''}</div>`;
-  h += `<div class="f-sub" style="margin-top:8px"><button data-a="v-lock">${F.lock ? 'فك القفل' : 'قفل اللمس'}</button><button data-a="v-paste">${ic('paste').replace('<svg', '<svg style="width:14px;height:14px;display:inline;vertical-align:-2px"')} لصق رابط</button><button data-a="video-sheet">المقاطع (${S.videos.length})</button></div>`;
-  if (!v) h += `<div class="mnote" style="text-align:center">انسخ رابط مقطع من يوتيوب واضغط «لصق رابط»، أو شاركه للتطبيق من يوتيوب بعد التثبيت.</div>`;
-  return h;
+/* مشغّل صغير ثابت: الـ iframe ينبني فقط إذا تغيّر المقطع — القفل والتكبير وكل ضغطات التسجيل ما توقفه */
+function syncVideo() {
+  const slot = $('#f-vslot'); if (!slot) return;
+  if (!F.showVid) { if (slot.innerHTML) slot.innerHTML = ''; slot.className = ''; return; }
+  const v = F.vid && S.videos.some(x => x.id === F.vid) ? F.vid : (S.videos[0]?.id || null);
+  if (v !== F.vid) F.vid = v;
+  slot.className = 'vrow' + (v ? (S.settings.vidBig ? ' big' : '') : ' none');
+  const box = slot.querySelector('.vid');
+  if (v && box?.dataset.id !== v) slot.innerHTML = `<div class="vid" data-id="${v}"><iframe src="https://www.youtube-nocookie.com/embed/${v}?playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="فيديو"></iframe><div class="lock"><span>${ic('lock')}مقفل</span></div></div><div class="vctl"></div>`;
+  else if (!v && (box || !slot.querySelector('.vctl'))) slot.innerHTML = '<div class="vctl"></div>';
+  slot.querySelector('.vid')?.classList.toggle('locked', F.lock);
+  const b = (a, icn, t, on) => `<button data-a="${a}"${on ? ' class="on"' : ''}>${ic(icn)}<span>${t}</span></button>`;
+  slot.querySelector('.vctl').innerHTML = v
+    ? b('v-lock', F.lock ? 'unlock' : 'lock', F.lock ? 'فك القفل' : 'قفل', F.lock) + b('v-size', S.settings.vidBig ? 'shrink' : 'grow', S.settings.vidBig ? 'تصغير' : 'تكبير') + b('v-paste', 'paste', 'لصق رابط') + b('video-sheet', 'list', `المقاطع ${S.videos.length}`)
+    : `<div class="vempty">انسخ رابط من يوتيوب واضغط «لصق رابط»</div>` + b('v-paste', 'paste', 'لصق رابط') + b('video-sheet', 'list', `المقاطع ${S.videos.length}`);
 }
 function videoSheet() {
   openSheet('مقاطع يوتيوب', `<div class="row-btns"><input id="v-url" placeholder="الصق رابط يوتيوب" inputmode="url"><button class="btn y" data-a="v-add" style="flex:none">${ic('plus')}</button></div>
@@ -1767,8 +1824,13 @@ function videoSheet() {
   <div class="mnote">يشتغل المقطع داخل وضع التركيز فوق شاشة التسجيل. قفل اللمس يمنع إيقافه بالغلط.</div>`);
 }
 async function pasteVideo() {
-  try { const t = await navigator.clipboard.readText(); const id = addVideo(t); if (id) { F.vid = id; toast('انضاف المقطع'); if (F.on) { F.showVid = true; renderFocus(); } else { closeSheet(); openFocus(S.ui.view === 'workout' ? 0 : 0, true); } } }
-  catch (e) { toast('المتصفح ما سمح بقراءة الحافظة — الصق الرابط يدوياً'); if (!F.on) videoSheet(); }
+  try {
+    const t = await navigator.clipboard.readText(); const id = ytId(t) ? addVideo(t) : null;
+    if (!id) { toast('الحافظة ما فيها رابط يوتيوب — الصقه هنا'); if (!sheetOpen) videoSheet(); setTimeout(() => $('#v-url')?.focus(), 350); return; }
+    F.vid = id; toast('انضاف المقطع');
+    if (F.on) { if (sheetOpen) closeSheet(); F.showVid = true; renderFocus(); } else { closeSheet(); openFocus(0, true); }
+  }
+  catch (e) { toast('الصق الرابط هنا يدوياً'); videoSheet(); setTimeout(() => $('#v-url')?.focus(), 350); }
 }
 
 /* ================= حاسبة الأقراص ================= */
@@ -2050,11 +2112,12 @@ document.addEventListener('click', e => {
     case 'focus-auto': S.settings.autoNext = !S.settings.autoNext; save.settings(); renderFocus(); break;
     case 'f-vid': F.showVid = !F.showVid; renderFocus(); break;
     case 'v-lock': F.lock = !F.lock; renderFocus(); break;
+    case 'v-size': S.settings.vidBig = !S.settings.vidBig; save.settings(); renderFocus(); break;
     case 'v-paste': pasteVideo(); break;
     case 'video-sheet': videoSheet(); break;
     case 'v-add': { const id = addVideo($('#v-url').value); if (id) { F.vid = id; closeSheet(); if (F.on) { F.showVid = true; renderFocus(); } else openFocus(0, true); } break; }
     case 'v-play': F.vid = D.id; closeSheet(); if (F.on) { F.showVid = true; renderFocus(); } else openFocus(0, true); break;
-    case 'v-del': S.videos = S.videos.filter(v => v.id !== D.id); save.videos(); if (F.vid === D.id) F.vid = null; videoSheet(); break;
+    case 'v-del': S.videos = S.videos.filter(v => v.id !== D.id); save.videos(); if (F.vid === D.id) F.vid = null; videoSheet(); if (F.on) renderFocus(); break;
     /* تطوري */
     case 'prog-ex': S.ui.progEx = D.ex; save.ui(); closeSheet(); if (F.on) closeFocus(); go('progress'); setTimeout(() => $('#ch-ex, .ch-empty')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120); break;
     case 'prog-metric': S.ui.progMetric = D.k; save.ui(); render(); break;
@@ -2140,11 +2203,17 @@ window.addEventListener('popstate', () => { if (IGNORE_POP) { IGNORE_POP = false
 
 /* ================= التشغيل ================= */
 function handleShare() {
-  const q = new URLSearchParams(location.search); if (!q.has('url') && !q.has('text') && !q.has('v')) return;
+  const q = new URLSearchParams(location.search); if (!q.has('url') && !q.has('text') && !q.has('v')) return false;
   const src = [q.get('url'), q.get('text'), q.get('v')].filter(Boolean).join(' ');
   const id = addVideo(src, q.get('title') || '');
   try { history.replaceState(null, '', location.pathname); } catch (e) {}
-  if (id && S.settings.onboarded) { F.vid = id; S.ui.view = 'workout'; render(); setTimeout(() => openFocus(0, true), 200); }
+  if (id && S.settings.onboarded) { const fs = savedFocus(); F.vid = id; S.ui.view = 'workout'; render(); setTimeout(() => openFocus(0, true, fs && [fs.i, fs.s]), 200); return true; }
+  return false;
+}
+/* رجعت للتطبيق بعد ما المتصفح سكّره؟ نرجعك لوضع التركيز بنفس المكان */
+function restoreFocus() {
+  const fs = savedFocus(); if (!fs || !S.settings.onboarded) return;
+  F.vid = fs.vid || null; S.ui.view = 'workout'; render(); openFocus(fs.i, fs.showVid, [fs.i, fs.s]);
 }
 /* رابط تطبيق خطة: ?prog=cp4&body=YYYY-MM-DD,وزن,دهون,عضلات[,خصر] — يسأل قبل أي تغيير */
 function handleImport() {
@@ -2170,7 +2239,7 @@ function handleImport() {
   }, false);
 }
 render();
-handleShare();
+if (!handleShare()) restoreFocus();
 handleImport();
 if (S.timer && remain() < -120000) stopRest();
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !/claude|claudeusercontent/.test(location.hostname)) {
